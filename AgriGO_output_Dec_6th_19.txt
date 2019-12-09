@@ -1,0 +1,63 @@
+GO term	Ontology	Description	Number in input list	Number in BG/Ref	p-value	FDR	(-)Log10P-value	Choice		
+GO:0010043	P	response to zinc ion	11	59	4.60E-07	0.00046	6.337242168	Paper		
+GO:0009628	P	response to abiotic stimulus	64	1397	3.20E-07	0.00046	6.494850022	Paper		
+GO:0007623	P	circadian rhythm	8	63	0.0002	0.03	3.698970004	Paper		
+GO:0009507	C	chloroplast	79	2136	3.30E-05	0.0027	4.48148606	Paper		
+GO:0016021	C	integral to membrane	66	1723	5.80E-05	0.004	4.236572006	Paper		
+GO:0006950	P	response to stress	83	2243	2.00E-05	0.0081	4.698970004	Ourselves		
+GO:0031667	P	response to nutrient levels	11	108	8.20E-05	0.021	4.086186148	Ourselves		
+GO:0055085	P	transmembrane transport	38	834	9.70E-05	0.022	4.013228266	Ourselves		
+GO:0048511	P	rhythmic process	8	63	0.0002	0.03	3.698970004	Ourselves		
+GO:0009267	P	cellular response to starvation	9	84	0.00025	0.03	3.602059991	Ourselves		
+GO:0042594	P	response to starvation	9	91	0.00044	0.032	3.356547324	Ourselves		
+GO:0009536	C	plastid	83	2254	2.40E-05	0.0025	4.619788758	Ourselves		
+GO:0050896	P	response to stimulus	123	3551	3.40E-06	0.0023	5.468521083	No		
+GO:0009812	P	flavonoid metabolic process	9	51	7.60E-06	0.0038	5.119186408	No		
+GO:0006575	P	cellular amino acid derivative metabolic process	19	269	3.40E-05	0.011	4.468521083	No		
+GO:0009813	P	flavonoid biosynthetic process	7	36	4.60E-05	0.013	4.337242168	No		
+GO:0042398	P	cellular amino acid derivative biosynthetic process	14	176	0.00011	0.023	3.958607315	No		
+GO:0044283	P	small molecule biosynthetic process	35	792	0.00031	0.03	3.508638306	No		
+GO:0009698	P	phenylpropanoid metabolic process	11	125	0.00027	0.03	3.568636236	No		
+GO:0009699	P	phenylpropanoid biosynthetic process	9	86	0.0003	0.03	3.522878745	No		
+GO:0010038	P	response to metal ion	27	543	0.00027	0.03	3.568636236	No		
+GO:0009651	P	response to salt stress	25	491	0.00032	0.03	3.494850022	No		
+GO:0009605	P	response to external stimulus	23	434	0.00033	0.03	3.48148606	No		
+GO:0055066	P	"di-, tri-valent inorganic cation homeostasis"	7	51	0.00032	0.03	3.494850022	No		
+GO:0030001	P	metal ion transport	17	267	0.00028	0.03	3.552841969	No		
+GO:0006970	P	response to osmotic stress	27	538	0.00024	0.03	3.619788758	No		
+GO:0000160	P	two-component signal transduction system (phosphorelay)	9	91	0.00044	0.032	3.356547324	No		
+GO:0051707	P	response to other organism	29	622	0.00045	0.032	3.346787486	No		
+GO:0019438	P	aromatic compound biosynthetic process	14	201	0.0004	0.032	3.397940009	No		
+GO:0006813	P	potassium ion transport	5	24	0.00044	0.032	3.356547324	No		
+GO:0019748	P	secondary metabolic process	18	302	0.00039	0.032	3.408935393	No		
+GO:0050801	P	aromatic compound biosynthetic process	9	94	0.00055	0.035	3.259637311	No		
+GO:0009991	P	response to extracellular stimulus	11	137	0.00056	0.035	3.251811973	No		
+GO:0055080	P	cation homeostasis	8	74	0.00053	0.035	3.27572413	No		
+GO:0009624	P	response to nematode	9	94	0.00055	0.035	3.259637311	No		
+GO:0031669	P	cellular response to nutrient levels	9	95	0.00059	0.036	3.229147988	No		
+GO:0009607	P	response to biotic stimulus	30	666	0.00061	0.036	3.214670165	No		
+GO:0006576	P	cellular biogenic amine metabolic process	8	79	0.00078	0.044	3.107905397	No		
+GO:0009266	P	response to temperature stimulus	23	464	0.00078	0.044	3.107905397	No		
+GO:0048878	P	chemical homeostasis	10	123	0.00089	0.047	3.050609993	No		
+GO:0008152	P	metabolic process	342	13125	0.00089	0.047	3.050609993	No		
+GO:0060089	F	molecular transducer activity	14	181	0.00015	0.025	3.823908741	No		
+GO:0003824	F	catalytic activity	312	11519	0.00011	0.025	3.958607315	No		
+GO:0051082	F	unfolded protein binding	13	153	0.00011	0.025	3.958607315	No		
+GO:0004871	F	signal transducer activity	14	181	0.00015	0.025	3.823908741	No		
+GO:0031072	F	heat shock protein binding	7	50	0.00029	0.038	3.537602002	No		
+GO:0016020	C	membrane	182	5709	1.50E-06	0.00063	5.823908741	No		
+GO:0005773	C	vacuole	43	867	4.80E-06	0.00076	5.318758763	No		
+GO:0005886	C	plasma membrane	90	2404	5.50E-06	0.00076	5.259637311	No		
+GO:0031224	C	intrinsic to membrane	67	1790	9.90E-05	0.005	4.004364805	No		
+GO:0044464	C	cell part	329	12261	0.00012	0.005	3.920818754	No		
+GO:0044444	C	cytoplasmic part	181	6103	0.00012	0.005	3.920818754	No		
+GO:0005623	C	cell	329	12261	0.00012	0.005	3.920818754	No		
+GO:0005737	C	cytoplasm	192	6663	0.00032	0.012	3.494850022	No		
+GO:0044434	C	chloroplast part	45	1174	0.00089	0.031	3.050609993	No		
+GO:0005774	C	vacuolar membrane	20	387	0.001	0.033	3	No		
+GO:0044437	C	vacuolar part	20	392	0.0012	0.034	2.920818754	No		
+GO:0044435	C	plastid part	45	1192	0.0012	0.034	2.920818754	No		
+GO:0044425	C	membrane part	88	2755	0.0014	0.035	2.853871964	No		
+GO:0031976	C	plastid thylakoid	20	407	0.0018	0.043	2.744727495	No		
+GO:0009534	C	chloroplast thylakoid	20	406	0.0018	0.043	2.744727495	No		
+GO:0031984	C	organelle subcompartment	20	413	0.0022	0.047	2.657577319	No		
