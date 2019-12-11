@@ -1,0 +1,612 @@
+---
+title: "Go_RNA"
+author: "Boris_Yosia_Sara_Peter_Shravanti_Martha"
+date: "12/2/2019"
+output: html_document
+---
+Let us clean our environment.
+```{r}
+rm(list = ls())
+
+```
+
+Now, we can download the files needed from our Git repository
+
+```{r}
+download.file("https://raw.githubusercontent.com/Boris-alladassi/Go_RNA_Final_project/master/DEgenes.counts.matrix", destfile = "./DEgenes.counts.matrix")
+
+download.file("https://raw.githubusercontent.com/Boris-alladassi/Go_RNA_Final_project/master/Fourth_DEgenes.counts.matrix", destfile = "./Fourth_DEgenes.counts.matrix")
+
+download.file("https://raw.githubusercontent.com/Boris-alladassi/Go_RNA_Final_project/master/AgriGO_output_Dec_6th_19.txt", destfile = "./GO_enrichment.txt")
+```
+
+OK let us load all the packages required for this pipeline.
+
+```{r}
+# For the differential expression analysis
+if (!requireNamespace("BiocManager", quietly = TRUE)){
+    install.packages("BiocManager")
+}
+
+if(!require(EBSeq)){
+  BiocManager::install("EBSeq")
+  library(EBSeq)
+}
+
+# To draw the Venn diagram
+if(!require(VennDiagram)){
+    install.packages("VennDiagram", dependencies = T)
+    library(VennDiagram)
+}
+
+# Tidyverse
+if(!require(tidyverse)){
+    install.packages("tidyverse", dependencies = T)
+    library(tidyverse)
+}
+
+# For plotting the heatmaps
+if(!require(pheatmap)){
+    install.packages("pheatmap", dependencies = T)
+    library(pheatmap)
+}
+
+
+if(!require(ggpubr)){
+    install.packages("ggpubr", dependencies = T)
+    library(ggpubr)
+}
+
+```
+
+
+
+## Differential expression analysis
+
+
+##########################################################
+##### Differential expression analysis for second leaf ###
+##########################################################
+
+```{r}
+
+DEgenes_matrix = read.delim(file = "./DEgenes.counts.matrix", header = T)
+
+name_column <- c("DEG", "WT_-_N_R1","WT_-_N_R2", "WT_-_N_R3",
+                 "WT_+_N_R1","WT_+_N_R2", "WT_+_N_R3",
+                 "atg1_-_N_R1","atg1_-_N_R2","atg1_-_N_R3",
+                 "atg1_+_N_R1","atg1_+_N_R2","atg1_+_N_R3",
+                 "atg2_-_N_R1","atg2_-_N_R2","atg2_-_N_R3",
+                 "atg2_+_N_R1", "atg2_+_N_R2", "atg2_+_N_R3")
+
+colnames(DEgenes_matrix) <- name_column
+
+DEgenes_with_N1 <- DEgenes_matrix %>% select("DEG", "WT_+_N_R1", "WT_+_N_R2","WT_+_N_R3", 
+                                     "atg1_+_N_R1", "atg1_+_N_R2", "atg1_+_N_R3",) %>% column_to_rownames(., var = "DEG") %>% as.matrix()
+
+
+DEgenes_with_N2 <- DEgenes_matrix %>% select("DEG", "WT_+_N_R1", "WT_+_N_R2","WT_+_N_R3", 
+                                     "atg2_+_N_R1", "atg2_+_N_R2", "atg2_+_N_R3") %>% column_to_rownames(., var = "DEG") %>% as.matrix()
+
+###################################3
+
+DEgenes_without_N1 <- DEgenes_matrix %>% select("DEG", "WT_-_N_R1","WT_-_N_R2", "WT_-_N_R3",
+                                        "atg1_-_N_R1","atg1_-_N_R2","atg1_-_N_R3") %>% column_to_rownames(., var = "DEG") %>% as.matrix()
+
+
+DEgenes_without_N2 <- DEgenes_matrix %>% select("DEG", "WT_-_N_R1","WT_-_N_R2", "WT_-_N_R3",
+                                        "atg2_-_N_R1","atg2_-_N_R2","atg2_-_N_R3") %>% column_to_rownames(., var = "DEG") %>% as.matrix()
+
+```
+
+DEG for condition with Nitrogen
+
+```{r}
+#Wildtype vs atg1 with N
+sizes_with_N1 <- MedianNorm(DEgenes_with_N1)
+
+Ebseq_out_with_N1 <- EBTest(Data = DEgenes_with_N1, Conditions = as.factor(c("wt", "wt", "wt", "mut", "mut", "mut")), sizeFactors = sizes_with_N1, maxround = 10)
+
+DEG_FDR_with_N1 <- GetDEResults(Ebseq_out_with_N1, FDR = 0.05, SmallNum = 0.001)
+
+Second_N1_PP <- DEG_FDR_with_N1$PPMat %>% as.data.frame() %>% 
+  rownames_to_column(., var = "Genes") %>% filter(., PPEE < 0.05)
+
+```
+
+```{r}
+
+#Wildtype vs atg2 with N
+sizes_with_N2 <- MedianNorm(DEgenes_with_N2)
+
+Ebseq_out_with_N2 <- EBTest(Data = DEgenes_with_N2, Conditions = as.factor(c("wt", "wt", "wt", "mut", "mut", "mut")), sizeFactors = sizes_with_N2, maxround = 10)
+
+DEG_FDR_with_N2 <- GetDEResults(Ebseq_out_with_N2, FDR = 0.05, SmallNum = 0.001)
+
+Second_N2_PP <- DEG_FDR_with_N2$PPMat %>% as.data.frame() %>% 
+  rownames_to_column(., var = "Genes") %>% filter(., PPEE < 0.05)
+
+```
+
+```{r}
+
+#Wildtype vs atg1 without N
+sizes_without_N1 <- MedianNorm(DEgenes_without_N1)
+
+Ebseq_out_without_N1 <- EBTest(Data = DEgenes_without_N1, Conditions = as.factor(c("wt", "wt", "wt", "mut", "mut", "mut")), sizeFactors = sizes_without_N1, maxround = 10)
+
+DEG_FDR_without_N1 <- GetDEResults(Ebseq_out_without_N1, FDR = 0.05, SmallNum = 0.001)
+
+Second_1_PP <- DEG_FDR_without_N1$PPMat %>% as.data.frame() %>% 
+  rownames_to_column(., var = "Genes") %>% filter(., PPEE < 0.05)
+
+```
+
+```{r}
+
+#Wildtype vs atg2 without N
+sizes_without_N2 <- MedianNorm(DEgenes_without_N2)
+
+Ebseq_out_without_N2 <- EBTest(Data = DEgenes_without_N2, Conditions = as.factor(c("wt", "wt", "wt", "mut", "mut", "mut")), sizeFactors = sizes_without_N2, maxround = 10)
+
+DEG_FDR_without_N2 <- GetDEResults(Ebseq_out_without_N2, FDR = 0.05, SmallNum = 0.001)
+
+Second_2_PP <- DEG_FDR_without_N2$PPMat %>% as.data.frame() %>% 
+  rownames_to_column(., var = "Genes") %>% filter(., PPEE < 0.05)
+
+```
+
+We will now extract consitent DEgenes across mutant and conditions of Nitrogen
+to be used for the GO enrichment analysis.
+
+```{r}
+DEG_without_N <- intersect(DEG_FDR_without_N2$DEfound, DEG_FDR_without_N1$DEfound)
+
+DEG_with_N <- intersect(DEG_FDR_with_N2$DEfound, DEG_FDR_with_N1$DEfound)
+
+DEG_all <- intersect(DEG_FDR_without_N2$DEfound, DEG_FDR_without_N1$DEfound) %>%
+  intersect(.,DEG_FDR_with_N2$DEfound) %>% 
+  intersect(., DEG_FDR_with_N1$DEfound) %>% as.data.frame()
+
+write_csv(DEG_all, "DEG_all.csv")
+
+```
+
+### Scatter plot for Second Leaf
+
+The scatter plot is only for significant(FDR <0.05) DE genes for both mutants under
+each Nitrogen conditions.
+
+```{r}
+########## With Nitrogen
+Second_N1_FC <- PostFC(Ebseq_out_with_N1, SmallNum = 0.001)$PostFC %>% as.data.frame() %>% rownames_to_column(., var = "Genes") %>% 
+  rename(., `log2FC_atg1/wt` = `.`) %>% 
+  mutate(`log2FC_atg1/wt` = log2(`log2FC_atg1/wt`))
+
+Second_N2_FC <- PostFC(Ebseq_out_with_N2, SmallNum = 0.001)$PostFC %>% as.data.frame() %>% rownames_to_column(., var = "Genes") %>% 
+  rename(., `log2FC_atg2/wt` = `.`) %>% 
+  mutate(`log2FC_atg2/wt` = log2(`log2FC_atg2/wt`))
+
+Significant_DEG_N <- DEG_with_N %>% as.data.frame() %>% rename(., Genes = `.`)
+
+Second_N_PostFC <- inner_join(Second_N1_FC, Second_N2_FC, by = "Genes") %>% 
+  inner_join(., Significant_DEG_N, by = "Genes")
+
+########## Without Nitrogen
+Second_1_FC <- PostFC(Ebseq_out_without_N1, SmallNum = 0.001)$PostFC %>% as.data.frame() %>% rownames_to_column(., var = "Genes") %>% 
+  rename(., `log2FC_atg1/wt` = `.`) %>% 
+  mutate(`log2FC_atg1/wt` = log2(`log2FC_atg1/wt`))
+
+Second_2_FC <- PostFC(Ebseq_out_without_N2, SmallNum = 0.001)$PostFC %>% as.data.frame() %>% rownames_to_column(., var = "Genes") %>% 
+  rename(., `log2FC_atg2/wt` = `.`) %>% 
+  mutate(`log2FC_atg2/wt` = log2(`log2FC_atg2/wt`))
+
+Significant_DEG <- DEG_without_N %>% as.data.frame() %>% rename(., Genes = `.`)
+
+Second_PostFC <- inner_join(Second_1_FC, Second_2_FC, by = "Genes")%>% 
+  inner_join(., Significant_DEG, by = "Genes")
+
+```
+
+```{r}
+
+scatter1<- ggplot(Second_N_PostFC, aes(x = `log2FC_atg1/wt`, y = `log2FC_atg2/wt`)) + 
+  geom_point() + theme_bw() + geom_hline(yintercept = 0) + geom_vline(xintercept = 0) +
+  expand_limits(x = c(-8, 8), y = c(-8, 8)) + ggtitle( "+N, n=1,714") +
+  stat_cor(method = "pearson", label.x = 2, label.y = -7.5, size = 3)
+
+
+scatter2<-ggplot(Second_PostFC, aes(x = `log2FC_atg1/wt`, y = `log2FC_atg2/wt`)) + geom_point() +
+  theme_bw() + geom_hline(yintercept = 0) + geom_vline(xintercept = 0) +
+  expand_limits(x = c(-8, 8), y = c(-8, 8)) + ggtitle("-N, n=2,269") +
+  stat_cor(method = "pearson", label.x = 2, label.y = -7.5, size = 3)
+
+ggarrange(scatter1, scatter2)
+
+```
+
+### Heatmap plot for second Leaf
+
+Let us prepare the data.
+Here, we are using the transcripts with a posterior probality of equal expression less 0.05 for
+both mutants in -N and +N conditions
+```{r}
+Second_with_N_PP <- inner_join(Second_N1_PP, Second_N2_PP, by = "Genes")
+Second_without_N_PP <- inner_join(Second_1_PP, Second_2_PP, by = "Genes")
+Second_PP <- full_join(Second_with_N_PP, Second_without_N_PP, by = "Genes") %>% select(Genes)
+
+Second_FC_all <- inner_join(Second_PP, DEgenes_matrix, by = c("Genes" = "DEG"))
+
+Second_FC <- Second_FC_all %>% select("Genes", "WT_-_N_R1","WT_-_N_R2", "WT_-_N_R3",
+                                        "atg1_-_N_R1","atg1_-_N_R2","atg1_-_N_R3",
+                                        "atg2_-_N_R1","atg2_-_N_R2","atg2_-_N_R3") %>% 
+  na.omit() %>% mutate(Wt_vg = (`WT_-_N_R1` + `WT_-_N_R2` +`WT_-_N_R3`)/3 ) %>% 
+  mutate_if(is.numeric, ~-log2((./Wt_vg)+0.00001)) %>% select(-Wt_vg)
+
+
+Second_FC_N <- Second_FC_all %>% select("Genes","WT_+_N_R1","WT_+_N_R2", "WT_+_N_R3",
+                                        "atg1_+_N_R1","atg1_+_N_R2","atg1_+_N_R3",
+                                        "atg2_+_N_R1", "atg2_+_N_R2", "atg2_+_N_R3")%>% 
+  na.omit() %>% mutate(Wt_vg = (`WT_+_N_R1` + `WT_+_N_R2` +`WT_+_N_R3`)/3 ) %>% 
+  mutate_if(is.numeric, ~-log2((./Wt_vg)+0.00001)) %>% select(-Wt_vg)
+
+Second_FC_Heat <- merge(Second_FC_N, Second_FC, by = "Genes") %>% 
+  select(-Genes) %>% na.omit() %>% arrange(desc(`atg1_+_N_R2`))
+Second_FC_Heat[Second_FC_Heat > 3] <- 4
+Second_FC_Heat[Second_FC_Heat < -3] <- -4
+
+Second_FC_matrix <- as.matrix(Second_FC_Heat)
+
+```
+
+Let us now plot the heatmap
+```{r}
+pheatmap(Second_FC_matrix, cluster_rows = F, cluster_cols = F,
+         col= c("purple","cyan","grey","black", "yellow", "orange", "red"),
+         legend_labels = "-log2FC", show_rownames = F,
+         fontsize_col = 7, cellwidth = 10, main = "Second leaf")
+
+```
+
+### Principal component analysis for Second leaf
+
+```{r}
+DEgenes_matrix_pca <- DEgenes_matrix %>% column_to_rownames(., var = "DEG") %>% as.matrix()
+
+Second_sizes_all <- MedianNorm(DEgenes_matrix_pca)
+
+Norm_DEgenes_matrix_pca <- GetNormalizedMat(DEgenes_matrix_pca, Second_sizes_all)
+
+Second_PCA_data <- Norm_DEgenes_matrix_pca %>% as.data.frame() %>% 
+  rownames_to_column(., var = "Genes") %>% 
+  inner_join(., DEG_all, by = c("Genes"= ".")) %>% 
+  column_to_rownames(., var = "Genes") %>% as.matrix() %>% 
+  t() %>% as.data.frame() %>% rownames_to_column(., var = "Genotypes") %>% 
+  mutate(Group = ifelse(grepl("WT_-", Genotypes), "WT_-N",
+                        ifelse(grepl("WT_+", Genotypes), "WT_+N",
+                        ifelse(grepl("atg1_-", Genotypes),"atg1_-N",
+                        ifelse(grepl("atg1_+", Genotypes),"atg1_+N",
+                        ifelse(grepl("atg2_-", Genotypes),"atg2_-N", "atg2_+N")))))) %>% 
+  select(Group, Genotypes, everything())
+
+
+library(FactoMineR)
+library(factoextra)
+
+pca = PCA(Second_PCA_data[,-(1:2)], scale.unit = T, ncp = 5, graph = F)
+
+biplot = fviz_pca_ind(pca,  col.ind= Second_PCA_data$Group,
+                      title = "Second Leaf") +
+  theme_bw()
+
+biplot  
+
+```
+
+
+##########################################################
+##### Differential expression analysis for fourth leaf ###
+##########################################################
+```{r}
+Fourth_DEgenes_matrix = read.delim(file = "./Fourth_DEgenes.counts.matrix", header = T)
+
+name_column <- c("DEG", "WT_-_N_R1","WT_-_N_R2", "WT_-_N_R3",
+                 "WT_+_N_R1","WT_+_N_R2", "WT_+_N_R3",
+                 "atg1_-_N_R1","atg1_-_N_R3",
+                 "atg1_+_N_R1","atg1_+_N_R2","atg1_+_N_R3",
+                 "atg2_-_N_R1","atg2_-_N_R2","atg2_-_N_R3",
+                 "atg2_+_N_R1", "atg2_+_N_R2", "atg2_+_N_R3")
+
+colnames(Fourth_DEgenes_matrix) <- name_column
+
+##################
+Fourth_DEgenes_with_N1 <- Fourth_DEgenes_matrix %>% 
+  select("DEG", "WT_+_N_R1", "WT_+_N_R2","WT_+_N_R3", 
+         "atg1_+_N_R1", "atg1_+_N_R2", "atg1_+_N_R3",) %>% 
+  column_to_rownames(., var = "DEG") %>% as.matrix()
+
+
+Fourth_DEgenes_with_N2 <- Fourth_DEgenes_matrix %>% 
+  select("DEG", "WT_+_N_R1", "WT_+_N_R2","WT_+_N_R3", 
+         "atg2_+_N_R1", "atg2_+_N_R2", "atg2_+_N_R3") %>% 
+  column_to_rownames(., var = "DEG") %>% as.matrix()
+
+###################
+
+Fourth_DEgenes_without_N1 <- Fourth_DEgenes_matrix %>% 
+  select("DEG", "WT_-_N_R1","WT_-_N_R2", "WT_-_N_R3",
+         "atg1_-_N_R1","atg1_-_N_R3") %>% 
+  column_to_rownames(., var = "DEG") %>% as.matrix()
+
+
+Fourth_DEgenes_without_N2 <- Fourth_DEgenes_matrix %>% 
+  select("DEG", "WT_-_N_R1","WT_-_N_R2", "WT_-_N_R3", 
+         "atg2_-_N_R1","atg2_-_N_R2","atg2_-_N_R3") %>% 
+  column_to_rownames(., var = "DEG") %>% as.matrix()
+```
+
+
+DEG for condition with Nitrogen
+
+```{r}
+#Fourth leaf : Wildtype vs atg1 with N
+Fourth_sizes_with_N1 <- MedianNorm(Fourth_DEgenes_with_N1)
+
+Fourth_Ebseq_out_with_N1 <- EBTest(Data = Fourth_DEgenes_with_N1, 
+                            Conditions = as.factor(c("wt", "wt", "wt", 
+                                                     "mut", "mut", "mut")), 
+                            sizeFactors = Fourth_sizes_with_N1, maxround = 10)
+
+Fourth_DEG_FDR_with_N1 <- GetDEResults(Fourth_Ebseq_out_with_N1, FDR = 0.05, SmallNum = 0.001)
+
+Fourth_N1_PP <- Fourth_DEG_FDR_with_N1$PPMat %>% as.data.frame() %>% 
+  rownames_to_column(., var = "Genes") %>% filter(., PPEE < 0.05)
+
+```
+
+```{r}
+# Fourth leaf: Wildtype vs atg2 with N
+Fourth_sizes_with_N2 <- MedianNorm(Fourth_DEgenes_with_N2)
+
+Fourth_Ebseq_out_with_N2 <- EBTest(Data = Fourth_DEgenes_with_N2, 
+                            Conditions = as.factor(c("wt", "wt", "wt", 
+                                                     "mut", "mut", "mut")), 
+                            sizeFactors = Fourth_sizes_with_N2, maxround = 10)
+
+Fourth_DEG_FDR_with_N2 <- GetDEResults(Fourth_Ebseq_out_with_N2, FDR = 0.05, SmallNum = 0.001)
+
+Fourth_N2_PP <- Fourth_DEG_FDR_with_N2$PPMat %>% as.data.frame() %>% 
+  rownames_to_column(., var = "Genes") %>% filter(., PPEE < 0.05)
+
+```
+
+```{r}
+
+#Fourth leaf: Wildtype vs atg1 without N
+Fourth_sizes_without_N1 <- MedianNorm(Fourth_DEgenes_without_N1)
+
+Fourth_Ebseq_out_without_N1 <- EBTest(Data = Fourth_DEgenes_without_N1, 
+                               Conditions = as.factor(c("wt", "wt", "wt", 
+                                                        "mut","mut")),
+                               sizeFactors = Fourth_sizes_without_N1, maxround = 10)
+
+Fourth_DEG_FDR_without_N1 <- GetDEResults(Fourth_Ebseq_out_without_N1, 
+                                          FDR = 0.05, SmallNum = 0.001)
+
+Fourth_1_PP <- Fourth_DEG_FDR_without_N1$PPMat %>% as.data.frame() %>% 
+  rownames_to_column(., var = "Genes") %>% filter(., PPEE < 0.05)
+
+```
+
+```{r}
+
+#Fourth leaf: Wildtype vs atg2 without N
+Fourth_sizes_without_N2 <- MedianNorm(Fourth_DEgenes_without_N2)
+
+Fourth_Ebseq_out_without_N2 <- EBTest(Data = Fourth_DEgenes_without_N2, 
+                               Conditions = as.factor(c("wt", "wt", "wt", 
+                                                        "mut", "mut", "mut")),
+                               sizeFactors = Fourth_sizes_without_N2, maxround = 10)
+
+Fourth_DEG_FDR_without_N2 <- GetDEResults(Fourth_Ebseq_out_without_N2, 
+                                          FDR = 0.05, SmallNum = 0.001)
+
+Fourth_2_PP <- Fourth_DEG_FDR_without_N2$PPMat %>% as.data.frame() %>% 
+  rownames_to_column(., var = "Genes") %>% filter(., PPEE < 0.05)
+
+```
+
+###### Extracting consitent DEgenes across mutant and conditions of Nitrogen
+
+```{r}
+Fourth_DEG_without_N <- intersect(Fourth_DEG_FDR_without_N2$DEfound, 
+                                  Fourth_DEG_FDR_without_N1$DEfound)
+
+Fourth_DEG_with_N <- intersect(Fourth_DEG_FDR_with_N2$DEfound, 
+                               Fourth_DEG_FDR_with_N1$DEfound)
+
+Fourth_DEG_all <- intersect(Fourth_DEG_FDR_without_N2$DEfound, 
+                            Fourth_DEG_FDR_without_N1$DEfound) %>%
+  intersect(., Fourth_DEG_FDR_with_N2$DEfound) %>% 
+  intersect(., Fourth_DEG_FDR_with_N1$DEfound) %>% as.data.frame()
+
+write_csv(Fourth_DEG_all, "Fourth_DEG_all.csv")
+
+```
+
+
+### Heatmap plot
+
+Let us prepare the data.
+Here, we are using the transcripts with a posterior probality of equal expression less 0.05 for
+both mutants in -N and +N conditions
+
+```{r}
+Fourth_with_N_PP <- inner_join(Fourth_N1_PP, Fourth_N2_PP, by = "Genes")
+Fourth_without_N_PP <- inner_join(Fourth_1_PP, Fourth_2_PP, by = "Genes")
+Fourth_PP <- full_join(Fourth_with_N_PP, Fourth_without_N_PP, by = "Genes") %>% select(Genes)
+
+Fourth_FC_all <- inner_join(Fourth_PP, Fourth_DEgenes_matrix, by = c("Genes" = "DEG"))
+
+Fourth_FC <- Fourth_FC_all %>% select("Genes", "WT_-_N_R1","WT_-_N_R2", "WT_-_N_R3",
+                                      "atg1_-_N_R1","atg1_-_N_R3",
+                                      "atg2_-_N_R1","atg2_-_N_R2","atg2_-_N_R3") %>% 
+  na.omit() %>% mutate(Wt_vg = (`WT_-_N_R1` + `WT_-_N_R2` +`WT_-_N_R3`)/3 ) %>% 
+  mutate_if(is.numeric, ~-log2((./Wt_vg)+0.00001)) %>% select(-Wt_vg)
+
+
+Fourth_FC_N <- Fourth_FC_all %>% select("Genes","WT_+_N_R1","WT_+_N_R2", "WT_+_N_R3",
+                                        "atg1_+_N_R1","atg1_+_N_R2","atg1_+_N_R3",
+                                        "atg2_+_N_R1", "atg2_+_N_R2", "atg2_+_N_R3")%>% 
+  na.omit() %>% mutate(Wt_vg = (`WT_+_N_R1` + `WT_+_N_R2` +`WT_+_N_R3`)/3 ) %>% 
+  mutate_if(is.numeric, ~-log2((./Wt_vg)+0.00001)) %>% select(-Wt_vg)
+
+Fourth_FC_Heat <- merge(Fourth_FC_N, Fourth_FC, by = "Genes") %>% 
+  select(-Genes) %>% na.omit() %>% arrange(desc(`atg1_+_N_R2`))
+Fourth_FC_Heat[Fourth_FC_Heat > 3] <- 4
+Fourth_FC_Heat[Fourth_FC_Heat < -3] <- -4
+
+Fourth_FC_matrix <- as.matrix(Fourth_FC_Heat)
+```
+
+Let us now plot the heatmaps
+```{r}
+pheatmap(Fourth_FC_matrix, cluster_rows = F, cluster_cols = F,
+         col= c("purple","cyan","grey","black", "yellow", "orange", "red"),
+         legend_labels = "-log2FC", show_rownames = F,
+         fontsize_col = 7, cellwidth = 10, main = "Fourth leaf")
+
+```
+
+
+### Scatter plot for Fourth Leaf
+
+The scatter plot is only for significant(FDR <0.05) DE genes for both mutants under
+each Nitrogen conditions.
+
+```{r}
+########## With Nitrogen
+Fourth_N1_FC <- PostFC(Fourth_Ebseq_out_with_N1, SmallNum = 0.001)$PostFC %>% as.data.frame() %>% rownames_to_column(., var = "Genes") %>% 
+  rename(., `log2FC_atg1/wt` = `.`) %>% 
+  mutate(`log2FC_atg1/wt` = log2(`log2FC_atg1/wt`))
+
+Fourth_N2_FC <- PostFC(Fourth_Ebseq_out_with_N2, SmallNum = 0.001)$PostFC %>% as.data.frame() %>% rownames_to_column(., var = "Genes") %>% 
+  rename(., `log2FC_atg2/wt` = `.`) %>% 
+  mutate(`log2FC_atg2/wt` = log2(`log2FC_atg2/wt`))
+
+Fourth_Significant_DEG_N <- Fourth_DEG_with_N %>% as.data.frame() %>% rename(., Genes = `.`)
+
+Fourth_N_PostFC <- inner_join(Fourth_N1_FC, Fourth_N2_FC, by = "Genes") %>% 
+  inner_join(., Fourth_Significant_DEG_N, by = "Genes")
+
+########## Without Nitrogen
+Fourth_1_FC <- PostFC(Ebseq_out_without_N1, SmallNum = 0.001)$PostFC %>% as.data.frame() %>% rownames_to_column(., var = "Genes") %>% 
+  rename(., `log2FC_atg1/wt` = `.`) %>% 
+  mutate(`log2FC_atg1/wt` = log2(`log2FC_atg1/wt`))
+
+Fourth_2_FC <- PostFC(Ebseq_out_without_N2, SmallNum = 0.001)$PostFC %>% as.data.frame() %>% rownames_to_column(., var = "Genes") %>% 
+  rename(., `log2FC_atg2/wt` = `.`) %>% 
+  mutate(`log2FC_atg2/wt` = log2(`log2FC_atg2/wt`))
+
+Fourth_Significant_DEG <- Fourth_DEG_without_N %>% as.data.frame() %>% rename(., Genes = `.`)
+
+Fourth_PostFC <- inner_join(Fourth_1_FC, Fourth_2_FC, by = "Genes")%>% 
+  inner_join(., Fourth_Significant_DEG, by = "Genes")
+
+```
+
+```{r}
+
+scatter3<- ggplot(Fourth_N_PostFC, aes(x = `log2FC_atg1/wt`, y = `log2FC_atg2/wt`)) + 
+  geom_point() + theme_bw() + geom_hline(yintercept = 0) + geom_vline(xintercept = 0) +
+  expand_limits(x = c(-8, 8), y = c(-8, 8)) + ggtitle( "+N, n=1,554") +
+  stat_cor(method = "pearson", label.x = 2, label.y = -7.5, size = 3)
+
+
+scatter4<-ggplot(Fourth_PostFC, aes(x = `log2FC_atg1/wt`, y = `log2FC_atg2/wt`)) + geom_point() +
+  theme_bw() + geom_hline(yintercept = 0) + geom_vline(xintercept = 0) +
+  expand_limits(x = c(-8, 8), y = c(-8, 8)) + ggtitle("-N, n=1,263") +
+  stat_cor(method = "pearson", label.x = 2, label.y = -7.5, size = 3)
+
+ggarrange(scatter3, scatter4)
+
+```
+
+
+### Principal component analysis for Fourth leaf
+
+```{r}
+Fourth_DEgenes_matrix_pca <- Fourth_DEgenes_matrix %>% 
+  column_to_rownames(., var = "DEG") %>% as.matrix()
+
+Fourth_sizes_all <- MedianNorm(Fourth_DEgenes_matrix_pca)
+Fourth_Norm_DEgenes_matrix_pca <- GetNormalizedMat(Fourth_DEgenes_matrix_pca,
+                                                   Fourth_sizes_all)
+
+Fourth_PCA_data <- Fourth_Norm_DEgenes_matrix_pca %>% as.data.frame() %>% 
+  rownames_to_column(., var = "Genes") %>% 
+  inner_join(., Fourth_DEG_all, by = c("Genes"= ".")) %>% 
+  column_to_rownames(., var = "Genes") %>% as.matrix() %>% 
+  t() %>% as.data.frame() %>% rownames_to_column(., var = "Genotypes") %>% 
+  mutate(Group = ifelse(grepl("WT_-", Genotypes), "WT_-N",
+                        ifelse(grepl("WT_+", Genotypes), "WT_+N",
+                        ifelse(grepl("atg1_-", Genotypes),"atg1_-N",
+                        ifelse(grepl("atg1_+", Genotypes),"atg1_+N",
+                        ifelse(grepl("atg2_-", Genotypes),"atg2_-N",
+                        "atg2_+N")))))) %>% 
+  select(Group, Genotypes, everything())
+
+
+library(FactoMineR)
+library(factoextra)
+
+pca = PCA(Fourth_PCA_data[,-(1:2)], scale.unit = T, ncp = 5, graph = F)
+
+biplot = fviz_pca_ind(pca,  col.ind= Fourth_PCA_data$Group,  
+                      title = "Fourth leaf") + theme_bw()
+
+biplot  
+
+```
+
+#### Drawing the Venn diagram
+```{r}
+
+`Second_leaf_N+` <-  DEG_with_N %>% na.omit()
+
+`Second_leaf_N-` <-  DEG_without_N %>% na.omit()
+
+`Fourth_leaf_N-` <-  Fourth_DEG_without_N %>% na.omit()
+
+`Fourth_leaf_N+` <-  Fourth_DEG_with_N %>% na.omit()
+
+print(venn.diagram(x = list(`Second_leaf_N+` = `Second_leaf_N+`, 
+                      `Fourth_leaf_N-` = `Fourth_leaf_N-`,
+                      `Second_leaf_N-` = `Second_leaf_N-`,
+                      `Fourth_leaf_N+` = `Fourth_leaf_N+`), 
+             filename = "venn_diagram.tiff", 
+             fill = c("sky blue", "salmon", "pink","green"), cat.cex = 0.7))
+
+```
+
+Let us now work on the GO enrichment bargraph
+
+```{r}
+# Now, we can import back the results from AgriGO
+
+go_data <- read_tsv("./GO_enrichment.txt")
+go <- go_data %>% as.data.frame() %>% 
+  select(Description, FDR, `(-)Log10P-value`, Choice) %>%
+  filter(., Choice %in% c("Paper", "Ourselves")) %>% 
+  arrange(desc(Description))
+
+ggplot(go, aes(x = Description, y = `(-)Log10P-value`, fill = Choice)) +
+  geom_col(color = "black") + theme_bw() + coord_flip() +
+  labs(x = "", y = "-Log10P-value")
+
+```
+
+
+
+
+
