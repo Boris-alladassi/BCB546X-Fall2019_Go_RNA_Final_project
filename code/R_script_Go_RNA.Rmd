@@ -13,11 +13,11 @@ rm(list = ls())
 Now, we can download the files needed from our Git repository
 
 ```{r}
-download.file("https://raw.githubusercontent.com/Boris-alladassi/Go_RNA_Final_project/master/DEgenes.counts.matrix", destfile = "./DEgenes.counts.matrix")
+download.file("https://raw.githubusercontent.com/Boris-alladassi/Go_RNA_Final_project/master/data/DEgenes.counts.matrix", destfile = "./DEgenes.counts.matrix")
 
-download.file("https://raw.githubusercontent.com/Boris-alladassi/Go_RNA_Final_project/master/Fourth_DEgenes.counts.matrix", destfile = "./Fourth_DEgenes.counts.matrix")
+download.file("https://raw.githubusercontent.com/Boris-alladassi/Go_RNA_Final_project/master/data/Fourth_DEgenes.counts.matrix", destfile = "./Fourth_DEgenes.counts.matrix")
 
-download.file("https://raw.githubusercontent.com/Boris-alladassi/Go_RNA_Final_project/master/AgriGO_output_Dec_6th_19.txt", destfile = "./GO_enrichment.txt")
+download.file("https://raw.githubusercontent.com/Boris-alladassi/Go_RNA_Final_project/master/data/AgriGO_output_Dec_6th_19.txt", destfile = "./GO_enrichment.txt")
 ```
 
 OK let us load all the packages required for this pipeline.
